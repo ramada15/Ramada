@@ -1,0 +1,128 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>رمادة</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e1713;--s1:#14211b;--s2:#1b2c24;--ln:#243a30;--tx:#e8f1ec;--mu:#8fa69a;--up:#6fdc8c;--dn:#ef6b6b;--upb:#1d3a2a;--dnb:#3a2024}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.5 'IBM Plex Sans Arabic',system-ui,sans-serif;padding-bottom:84px}
+header{position:sticky;top:0;background:var(--bg);padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--ln);z-index:5}
+h1{font-size:24px;font-weight:700}
+#stt{margin-inline-start:auto;color:var(--mu);font-size:12px}
+main{max-width:560px;margin:auto}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{background:var(--s2);border:1px solid var(--ln);border-radius:10px;padding:9px 12px;width:100%}
+textarea{min-height:70px;direction:ltr}
+.bar{display:flex;gap:8px;padding:10px 16px;overflow-x:auto}
+.chip{white-space:nowrap;padding:6px 12px;border-radius:20px;background:var(--s2);color:var(--mu);border:1px solid transparent;font-size:13px;cursor:pointer}
+.chip.on{background:var(--upb);color:var(--up);border-color:var(--up)}
+.chip.up{background:var(--upb);color:var(--up)}.chip.dn{background:var(--dnb);color:var(--dn)}
+.tools{display:flex;gap:8px;padding:0 16px 8px}
+.r{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--ln);cursor:pointer}
+.r .nm{flex:1}.r .nm b{display:block;font-size:17px}.r small{color:var(--mu)}
+.px{direction:ltr;font-variant-numeric:tabular-nums}
+.pill{direction:ltr;min-width:78px;text-align:center;padding:5px 8px;border-radius:8px;font-weight:700;color:#0e1713;background:var(--up)}
+.pill.dn{background:var(--dn)}
+.star{background:none;border:0;font-size:22px;color:var(--mu);cursor:pointer}.star.on{color:var(--up)}
+.sec{padding:14px 16px}.sec h2{font-size:16px;margin-bottom:10px}
+.it{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--ln)}
+.it code{direction:ltr;display:block;color:var(--mu);font-size:12px;overflow-wrap:anywhere}
+.it>div{flex:1}
+.btn{background:var(--up);color:#0e1713;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer}
+.x{background:none;border:0;color:var(--dn);font-size:18px;cursor:pointer}
+.f{display:grid;gap:8px;margin-top:10px}
+.empty{padding:40px 16px;text-align:center;color:var(--mu)}
+nav{position:fixed;bottom:0;inset-inline:0;background:var(--s1);border-top:1px solid var(--ln);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0)}
+nav div{display:flex;width:100%;max-width:560px;padding:8px}
+nav button{flex:1;background:none;border:0;color:var(--mu);padding:12px 4px;border-radius:14px;position:relative;cursor:pointer}
+nav button.on{background:var(--upb);color:var(--up);font-weight:700}
+nav i{position:absolute;top:2px;inset-inline-start:calc(50% + 14px);background:var(--up);color:#0e1713;font-style:normal;font-size:11px;font-weight:700;border-radius:10px;padding:0 6px}
+#sh{position:fixed;inset:0;background:#000a;display:none;align-items:flex-end;z-index:20}#sh.on{display:flex}
+.sheet{background:var(--s1);width:100%;max-width:560px;margin:auto;max-height:90vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px}
+.sheet .top{display:flex;justify-content:space-between;color:var(--mu);margin-bottom:8px}
+.big{font-size:40px;font-weight:700;line-height:1.1}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--ln);border-radius:14px;overflow:hidden}
+.c{padding:12px 14px;border:1px solid var(--ln);margin:-.5px}.c small{display:block;color:var(--mu);font-size:13px}.c b{font-size:19px;direction:ltr;display:block;text-align:right;font-variant-numeric:tabular-nums}
+</style></head><body>
+<header><h1>رمادة</h1><span id="stt"></span><button class="chip" data-a="refresh">تحديث</button></header>
+<main id="app"></main>
+<nav><div id="nv"></div></nav><div id="sh"><div class="sheet" id="sheet"></div></div>
+<script>
+const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const LS=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),fmt=n=>isFinite(n)?(+n).toFixed(2):'—';
+
+/* ===== مكتبة المؤشرات: أضف دوالك هنا أو من تبويب الاستراتيجيات ===== */
+const I={
+sma:(a,n)=>a.map((_,i)=>i<n-1?NaN:a.slice(i-n+1,i+1).reduce((s,x)=>s+x,0)/n),
+ema:(a,n)=>{const k=2/(n+1);let e=a[0];return a.map((x,i)=>i?(e=x*k+e*(1-k)):e)},
+rsi:(c,n)=>{let g=0,l=0;return c.map((x,i)=>{if(!i)return NaN;const d=x-c[i-1],u=Math.max(d,0),w=Math.max(-d,0);if(i<=n){g+=u;l+=w;if(i<n)return NaN;g/=n;l/=n}else{g=(g*(n-1)+u)/n;l=(l*(n-1)+w)/n}return l?100-100/(1+g/l):100})},
+macd:c=>{const a=I.ema(c,12),b=I.ema(c,26),m=a.map((x,i)=>x-b[i]),s=I.ema(m,9);return m.map((x,i)=>x-s[i])},
+atr:(h,l,c,n)=>{const t=h.map((x,i)=>i?Math.max(x-l[i],Math.abs(x-c[i-1]),Math.abs(l[i]-c[i-1])):x-l[i]);let a=0;return t.map((x,i)=>i<n-1?(a+=x,NaN):i==n-1?(a=(a+x)/n):(a=(a*(n-1)+x)/n))},
+bbw:(c,n)=>I.sma(c,n).map((m,i)=>{if(i<n-1)return NaN;const s=c.slice(i-n+1,i+1);return 4*Math.sqrt(s.reduce((q,x)=>q+(x-m)**2,0)/n)/m*100}),
+hh:(a,n)=>a.map((_,i)=>i<n?NaN:Math.max(...a.slice(i-n,i))),
+ll:(a,n)=>a.map((_,i)=>i<n?NaN:Math.min(...a.slice(i-n,i))),
+st:(h,l,c,n=10,m=3)=>{const a=I.atr(h,l,c,n);let d=1,fu=0,fl=0;return c.map((x,i)=>{if(isNaN(a[i]))return NaN;const md=(h[i]+l[i])/2,u=md+m*a[i],lo=md-m*a[i];if(!fu){fu=u;fl=lo}else{fu=(u<fu||c[i-1]>fu)?u:fu;fl=(lo>fl||c[i-1]<fl)?lo:fl;if(d==1&&x<fl)d=-1;else if(d==-1&&x>fu)d=1}return d})}
+};
+Object.assign(I,{
+mid:(h,l,n)=>h.map((_,i)=>i<n-1?NaN:(Math.max(...h.slice(i-n+1,i+1))+Math.min(...l.slice(i-n+1,i+1)))/2),
+cloud:(h,l,top)=>{const t=I.mid(h,l,9),k=I.mid(h,l,26),b=I.mid(h,l,52);return h.map((_,i)=>{if(i<26)return NaN;const A=(t[i-26]+k[i-26])/2,B=b[i-26];return top?Math.max(A,B):Math.min(A,B)})},
+avwap:(h,l,c,v,n=60)=>{const s=Math.max(0,l.length-n);let m=s;for(let i=s;i<l.length;i++)if(l[i]<l[m])m=i;let pv=0,vv=0;return l.map((_,i)=>{if(i<m)return NaN;pv+=(h[i]+l[i]+c[i])/3*v[i];vv+=v[i];return pv/vv})},
+since:(h,l,n=60)=>{const s=Math.max(0,l.length-n);let a=s,b=s;for(let i=s;i<l.length;i++){if(l[i]<l[a])a=i;if(h[i]>h[b])b=i}return l.length-1-Math.max(a,b)}
+});
+const IND0=[["sma8","خط 8","I.sma(c,8)"],["sma20","خط 20","I.sma(c,20)"],["sma50","خط 50","I.sma(c,50)"],["rsi","RSI (14)","I.rsi(c,14)"],["macd","هيستوغرام MACD","I.macd(c)"],["atr","ATR (14)","I.atr(h,l,c,14)"],["atrp","ATR %","I.atr(h,l,c,14).map((x,i)=>x/c[i]*100)"],["bbw","عرض بولينجر %","I.bbw(c,20)"],["res20","مقاومة 20 يوم","I.hh(h,20)"],["sup20","دعم 20 يوم","I.ll(l,20)"],["st","سوبرترند","I.st(h,l,c)"],["stflip","انقلاب سوبرترند (3 جلسات)","(()=>{const d=I.st(h,l,c);return d.map((x,i)=>i&&x==1&&d[i-1]==-1?1:0).map((x,i,a)=>a.slice(Math.max(0,i-2),i+1).some(Boolean)?1:0)})()"],["relvol","الحجم النسبي","(()=>{const m=I.sma(v,20);return v.map((x,i)=>x/m[i])})()"],
+["tenkan","Tenkan (9)","I.mid(h,l,9)"],["kijun","Kijun (26)","I.mid(h,l,26)"],["ctop","أعلى السحابة","I.cloud(h,l,1)"],["cbot","أسفل السحابة","I.cloud(h,l,0)"],
+["ichibull","إيشيموكو صاعد","(()=>{const t=I.mid(h,l,9),k=I.mid(h,l,26),b=I.cloud(h,l,1);return c.map((x,i)=>i>=52&&x>b[i]&&t[i]>k[i]&&x>c[i-26]?1:0)})()"],
+["ichibear","إيشيموكو هابط","(()=>{const t=I.mid(h,l,9),k=I.mid(h,l,26),b=I.cloud(h,l,0);return c.map((x,i)=>i>=52&&x<b[i]&&t[i]<k[i]&&x<c[i-26]?1:0)})()"],
+["avwap","VWAP المرتكز من القاع","I.avwap(h,l,c,v)"],["since","جلسات منذ آخر قمة/قاع","I.since(h,l)"],["inwin","داخل نافذة انعكاس زمنية","[8,13,21,34,55].some(f=>Math.abs(I.since(h,l)-f)<=1)?1:0"]];
+const ST0=[["السعر فوق خط 8","up","price>sma8"],["السعر فوق خط 20","up","price>sma20"],["تقاطع صاعد 8 فوق 20","up","sma8>sma20 && sma8_p<=sma20_p"],["اختراق مقاومة 20 يوم","up","price>res20"],["سوبرترند صاعد","up","st==1"],["انقلاب السوبرترند إلى صاعد (آخر 3 جلسات)","up","stflip==1"],["RSI ذروة بيع","up","rsi<30"],["السعر تحت خط 50","dn","price<sma50"],["RSI تشبع شراء","dn","rsi>70"],["إيشيموكو صاعد: فوق السحابة وTenkan فوق Kijun وChikou فوق سعر قبل 26 جلسة","up","ichibull==1"],["إيشيموكو هابط: تحت السحابة وTenkan تحت Kijun وChikou تحت سعر قبل 26 جلسة","dn","ichibear==1"],["السعر فوق VWAP المرتكز من القاع","up","price>avwap"],["داخل نافذة انعكاس زمنية (فريم يومي)","up","inwin==1"]].map((a,i)=>({id:'d'+i,n:a[0],t:a[1],e:a[2],on:1}));
+const U0=[["AAPL","Apple"],["MSFT","Microsoft"],["NVDA","Nvidia"],["TSLA","Tesla"],["META","Meta Platforms"],["AMZN","Amazon"],["GOOGL","Alphabet"],["LLY","Eli Lilly"],["JPM","JPMorgan Chase"],["AVGO","Broadcom"],["ORCL","Oracle"],["NFLX","Netflix"],["AMD","AMD"],["COST","Costco"],["V","Visa"],["WMT","Walmart"],["XOM","Exxon Mobil"],["BA","Boeing"]],names=Object.fromEntries(U0);
+
+/* ===== مزودو البيانات: كلٌّ يعيد {SYM:[{o,h,l,c,v}...]} من الأقدم للأحدث ===== */
+const demo=s=>{let sd=[...s].reduce((a,ch)=>(a*31+ch.charCodeAt(0))>>>0,7);const r=()=>(sd=(sd*1664525+1013904223)>>>0)/4294967296;let p=50+r()*400;const dr=(r()-.45)*.004;return Array.from({length:130},()=>{const o=p;p*=1+dr+(r()-.5)*.04;return{o,h:Math.max(o,p)*(1+r()*.012),l:Math.min(o,p)*(1-r()*.012),c:p,v:1e6*(.5+r())*(1+r())}})};
+const PROV={
+demo:{n:"بيانات تجريبية",run:async(ch)=>Object.fromEntries(ch.map(s=>[s,demo(s)])),size:99,wait:0},
+twelve:{n:"Twelve Data (مجاني)",size:8,wait:62000,run:async(ch,key)=>{const r=await fetch(`https://api.twelvedata.com/time_series?symbol=${ch.join(',')}&interval=1day&outputsize=120&apikey=${key}`).then(r=>r.json());const g=ch.length==1?{[ch[0]]:r}:r,o={};for(const s of ch){const v=g[s]?.values;if(v)o[s]=[...v].reverse().map(b=>({o:+b.open,h:+b.high,l:+b.low,c:+b.close,v:+b.volume}))}if(!Object.keys(o).length)throw new Error(r.message||'لا بيانات');return o}}
+/* لإضافة مزود: PROV.mine={n:'اسمه',size:10,wait:0,run:async(symbols,key)=>({AAPL:[...]})} */
+};
+PROV.alpaca={n:"Alpaca (مجاني)",size:40,wait:0,run:async(ch,key)=>{const[k,s]=(key||'').split(':').map(x=>x.trim());if(!k||!s)throw new Error('ضع المفتاح بصيغة KEY:SECRET');const st=new Date(Date.now()-220*864e5).toISOString().slice(0,10),o={};let tok='';do{const u=`https://data.alpaca.markets/v2/stocks/bars?symbols=${ch.join(',')}&timeframe=1Day&start=${st}&limit=10000&adjustment=split&feed=iex${tok?'&page_token='+tok:''}`;let r;try{r=await fetch(u,{headers:{'APCA-API-KEY-ID':k,'APCA-API-SECRET-KEY':s}})}catch(e){let ok=1;try{await fetch('https://data.alpaca.markets/v2/stocks/AAPL/bars/latest')}catch{ok=0}throw new Error(ok?'Alpaca متاح لكنه رفض ترويسات المفاتيح من المتصفح (CORS)':'المتصفح يمنع الاتصال بـ Alpaca من هذه الصفحة ('+(location.protocol=='file:'?'ملف محلي':location.host)+')')}const j=await r.json();if(!r.ok)throw new Error(j.message||r.status);for(const[sym,a]of Object.entries(j.bars||{}))(o[sym]=o[sym]||[]).push(...a.map(b=>({o:b.o,h:b.h,l:b.l,c:b.c,v:b.v})));tok=j.next_page_token||''}while(tok);if(!Object.keys(o).length)throw new Error('لا بيانات');return o}};
+
+let tab='scr',sel=new Set(LS('sel',[])),q='',sortBy='chg',open=null,rows=[];
+let cfg=LS('cfg',{p:'demo',key:'',syms:U0.map(a=>a[0]).join(', ')}),strs=LS('strs',ST0),inds=LS('inds',IND0),fav=new Set(LS('fav',[])),bars=LS('bars',{});
+IND0.forEach(i=>{if(!inds.some(x=>x[0]==i[0]))inds.push(i)});ST0.forEach(t=>{if(!strs.some(x=>x.n==t.n)&&!strs.some(x=>x.e==t.e))strs.push({...t,id:'m'+t.id})});
+const calc=(b)=>{const o=b.map(x=>x.o),h=b.map(x=>x.h),l=b.map(x=>x.l),c=b.map(x=>x.c),v=b.map(x=>x.v),x={price:c.at(-1),chg:(c.at(-1)/c.at(-2)-1)*100};for(const[k,,code]of inds){try{const r=new Function('o','h','l','c','v','I','return '+code)(o,h,l,c,v,I);if(Array.isArray(r)){x[k]=r.at(-1);x[k+'_p']=r.at(-2)}else x[k]=r}catch{x[k]=NaN}}return x};
+const syms=()=>cfg.syms.split(/[\s,،]+/).filter(Boolean).map(s=>s.toUpperCase());
+function build(){const fns=strs.map(t=>{try{return new Function('x','with(x){return !!('+t.e+')}')}catch{return()=>false}});
+rows=syms().filter(s=>bars[s]?.length>55).map(s=>{const x=calc(bars[s]);return{s,n:names[s]||'',x,m:strs.filter((t,i)=>{if(!t.on)return 0;try{return fns[i](x)}catch{return 0}}).map(t=>t.id)}})}
+async function load(){const P=PROV[cfg.p],all=syms();try{for(let i=0;i<all.length;i+=P.size){const ch=all.slice(i,i+P.size);$('#stt').textContent=`جارٍ التحميل ${Math.min(i+P.size,all.length)}/${all.length}`;Object.assign(bars,await P.run(ch,cfg.key));save('bars',bars);build();paint();if(i+P.size<all.length)await sleep(P.wait)}$('#stt').textContent='آخر تحديث '+new Date().toLocaleTimeString('ar')}catch(e){$('#stt').textContent='خطأ: '+e.message}}
+
+const rowH=r=>`<div class="r" data-a="open" data-v="${r.s}"><button class="star ${fav.has(r.s)?'on':''}" data-a="fav" data-v="${r.s}">${fav.has(r.s)?'★':'☆'}</button><div class="nm"><b>${r.s}</b><small>${esc(r.n)}</small></div><span class="px">${fmt(r.x.price)}</span><span class="pill ${r.x.chg<0?'dn':''}">${r.x.chg>0?'+':''}${fmt(r.x.chg)}%</span></div>`;
+function list(){let a=rows.filter(r=>(tab!='fav'||fav.has(r.s))&&[...sel].every(i=>r.m.includes(i))&&(r.s+r.n).toLowerCase().includes(q.toLowerCase()));
+const key={chg:r=>-r.x.chg,rsi:r=>r.x.rsi,sig:r=>-r.m.filter(i=>strs.find(t=>t.id==i)?.t=='up').length}[sortBy];a.sort((p,z)=>key(p)-key(z));
+$('#lst').innerHTML=`<div class="sec" style="padding:4px 16px;color:var(--mu);font-size:13px">${a.length} سهم</div>`+(a.map(rowH).join('')||'<div class="empty">لا نتائج. خفّف الشروط أو حدّث البيانات.</div>')}
+function paint(){$('#nv').innerHTML=[['scr','الفرز'],['fav','المفضلة'],['str','الاستراتيجيات'],['set','الإعدادات']].map(([k,l])=>`<button class="${tab==k?'on':''}" data-a="tab" data-v="${k}">${l}${k=='fav'&&fav.size?`<i>${fav.size}</i>`:''}</button>`).join('');
+const A=$('#app');
+if(tab=='scr'||tab=='fav'){A.innerHTML=(tab=='scr'?`<div class="bar">${strs.filter(t=>t.on).map(t=>`<button class="chip ${sel.has(t.id)?'on':''}" data-a="sel" data-v="${t.id}">${esc(t.n)}</button>`).join('')}</div>`:'')+`<div class="tools"><input id="q" placeholder="بحث عن رمز" value="${esc(q)}"><select id="so" style="width:auto"><option value="chg">التغير</option><option value="sig">عدد الإشارات</option><option value="rsi">RSI</option></select></div><div id="lst"></div>`;$('#so').value=sortBy;list()}
+else if(tab=='str'){A.innerHTML=`<div class="sec"><h2>الاستراتيجيات</h2>${strs.map(t=>`<div class="it"><input type="checkbox" style="width:auto" ${t.on?'checked':''} data-a="tog" data-v="${t.id}"><div><b style="color:var(--${t.t})">${esc(t.n)}</b><code>${esc(t.e)}</code></div><button class="x" data-a="delS" data-v="${t.id}">✕</button></div>`).join('')}
+<div class="f"><input id="sn" placeholder="اسم الاستراتيجية"><input id="se" dir="ltr" placeholder="rsi<30 && price>sma50"><select id="stp"><option value="up">إشارة صاعدة</option><option value="dn">إشارة هابطة</option></select><button class="btn" data-a="addS">إضافة استراتيجية</button></div></div>
+<div class="sec"><h2>المؤشرات</h2>${inds.map(([k,l,c])=>`<div class="it"><div><b>${esc(l)}</b> <small>${k}, ${k}_p</small><code>${esc(c)}</code></div><button class="x" data-a="delI" data-v="${k}">✕</button></div>`).join('')}
+<div class="f"><input id="ik" dir="ltr" placeholder="المفتاح: ema9"><input id="il" placeholder="الاسم: EMA 9"><textarea id="ic" placeholder="I.ema(c,9)"></textarea><small style="color:var(--mu)">المتغيرات: o h l c v (مصفوفات) و I (الدوال: sma ema rsi macd atr bbw hh ll st). أعد رقماً أو مصفوفة.</small><button class="btn" data-a="addI">إضافة مؤشر</button></div></div>`}
+else{A.innerHTML=`<div class="sec"><h2>مصدر الأسعار</h2><div class="f"><select id="cp">${Object.entries(PROV).map(([k,p])=>`<option value="${k}" ${cfg.p==k?'selected':''}>${p.n}</option>`).join('')}</select><input id="ck" dir="ltr" placeholder="API key (Alpaca: KEY:SECRET)" value="${esc(cfg.key)}"><textarea id="cs">${esc(cfg.syms)}</textarea><button class="btn" data-a="refresh">حفظ وتحديث</button><small style="color:var(--mu)">الخطة المجانية في Twelve Data: 8 رموز بالدقيقة، لذلك يحمّل التطبيق على دفعات ويحفظ النتيجة محلياً. شغّل الملف من جهازك لتعمل الطلبات.</small></div></div>`}}
+function sheet(s){const r=rows.find(r=>r.s==s),x=r.x,ms=r.m.map(i=>strs.find(t=>t.id==i)).filter(Boolean);
+$('#sheet').innerHTML=`<div class="top"><b>${s}</b><span>تفاصيل السهم</span></div><div class="big">${s}</div><small style="color:var(--mu);font-size:20px">${esc(r.n)}</small><div class="px" style="margin-top:8px;font-size:24px;font-weight:700;text-align:right">$${fmt(x.price)} <span style="font-size:16px;color:var(--${x.chg<0?'dn':'up'})">${x.chg>0?'+':''}${fmt(x.chg)}%</span></div>
+<div class="chips">${ms.map(t=>`<span class="chip ${t.t}">${esc(t.n)}</span>`).join('')||'<small style="color:var(--mu)">لا توجد إشارات مفعّلة</small>'}</div><div class="sec" style="padding:0 0 8px;color:var(--up)">المؤشرات</div>
+<div class="grid">${inds.filter(i=>i[0]!='stflip').map(([k,l])=>`<div class="c"><small>${esc(l)}</small><b>${k=='st'?(x[k]>0?'صاعد':'هابط'):fmt(x[k])}</b></div>`).join('')}</div>`;$('#sh').classList.add('on')}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(e.target.id=='sh')return $('#sh').classList.remove('on');if(!t)return;e.stopPropagation();const a=t.dataset.a,v=t.dataset.v;
+if(a=='tab'){tab=v;paint()}
+else if(a=='open')sheet(v)
+else if(a=='fav'){fav.has(v)?fav.delete(v):fav.add(v);save('fav',[...fav]);paint()}
+else if(a=='sel'){sel.has(v)?sel.delete(v):sel.add(v);save('sel',[...sel]);paint()}
+else if(a=='tog'){const s=strs.find(s=>s.id==v);s.on=t.checked?1:0;save('strs',strs);build()}
+else if(a=='delS'){strs=strs.filter(s=>s.id!=v);sel.delete(v);save('strs',strs);build();paint()}
+else if(a=='addS'){const n=$('#sn').value.trim(),ex=$('#se').value.trim();if(!n||!ex)return;try{new Function('x','with(x){return '+ex+'}')}catch(er){return alert('صيغة غير صحيحة: '+er.message)}strs.push({id:'u'+Date.now(),n,t:$('#stp').value,e:ex,on:1});save('strs',strs);build();paint()}
+else if(a=='delI'){inds=inds.filter(i=>i[0]!=v);save('inds',inds);build();paint()}
+else if(a=='addI'){const k=$('#ik').value.trim(),l=$('#il').value.trim()||k,c=$('#ic').value.trim();if(!/^[a-zA-Z_]\w*$/.test(k)||!c||inds.some(i=>i[0]==k))return alert('مفتاح غير صالح أو مكرر');try{new Function('o','h','l','c','v','I','return '+c)}catch(er){return alert('صيغة غير صحيحة: '+er.message)}inds.push([k,l,c]);save('inds',inds);build();paint()}
+else if(a=='refresh'){if($('#cp')){cfg={p:$('#cp').value,key:$('#ck').value.trim(),syms:$('#cs').value};save('cfg',cfg)}load()}});
+document.addEventListener('input',e=>{if(e.target.id=='q'){q=e.target.value;list()}});
+document.addEventListener('change',e=>{if(e.target.id=='so'){sortBy=e.target.value;list()}});
+if(!Object.keys(bars).length&&cfg.p=='demo')load();else{build();paint();$('#stt').textContent=cfg.p=='demo'?'بيانات تجريبية':'محفوظة محلياً'}
+</script></body></html>
